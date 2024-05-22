@@ -30,8 +30,7 @@ let handle sock =
             Lwt_io.printf "Other: %s\n" msg.content >>= fun () ->
             Lwt_io.write_line oc
               (Message.Acknowledgement msg.id |> Message.to_string)
-            >>= fun () ->
-            Lwt_io.flush oc >>= fun () -> read_messages ())
+            >>= fun () -> read_messages ())
     | None -> Lwt_io.print "Connection closed\n"
   in
   let rec send_messages () =
