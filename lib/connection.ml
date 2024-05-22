@@ -1,15 +1,5 @@
 open Lwt
 
-let retrieve_address_and_port () =
-  if Array.length Sys.argv < 3 then
-    Logs_lwt.info (fun m ->
-        m "Specify both address and port, i.e. 127.0.0.1 9000")
-    >>= fun () -> Lwt.fail_with "Insufficient arguments"
-  else
-    let address = Sys.argv.(2) |> Unix.inet_addr_of_string in
-    let port = Sys.argv.(3) |> int_of_string in
-    return (address, port)
-
 let handle sock =
   let ic = Lwt_io.of_fd ~mode:Lwt_io.Input sock in
   let oc = Lwt_io.of_fd ~mode:Lwt_io.Output sock in
