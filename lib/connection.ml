@@ -1,5 +1,10 @@
 open Lwt
 
+(* NOTE: handle is the main loop for both client and server. Either side can send a message which will only appear in the senders chat after receiving an ack from the reciever. This allows for handling multiple en-route messages *)
+(* NOTE: This code only runs between two peers, but could be scaled up by using a CRDT if we either wanted to drop the roundtrip requirement, bite the bullet on roundtrip time, or implement a more sophisticated gossip protocol  *)
+(* NOTE: This code only runs locally *)
+(* TODO: remove messages after receiving ack *)
+
 let handle sock =
   let ic = Lwt_io.of_fd ~mode:Lwt_io.Input sock in
   let oc = Lwt_io.of_fd ~mode:Lwt_io.Output sock in
@@ -11,6 +16,7 @@ let handle sock =
         match String.trim msg |> Message.of_string_exn with
         | Acknowledgement id ->
             let time, content = Hashtbl.find queued_messages id in
+            
             Lwt_io.printf "User: %s\nRoundtrip time: %f\n" content
               (Unix.time () -. time)
             >>= fun () -> read_messages ()
