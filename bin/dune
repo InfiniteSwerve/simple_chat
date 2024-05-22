@@ -1,0 +1,5 @@
+(executable
+  (name main)
+  (libraries lwt lwt.unix lambda-term simple_chat_lib)
+  (preprocess (pps ppx_deriving_yojson))
+)
