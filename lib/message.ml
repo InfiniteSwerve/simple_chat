@@ -9,10 +9,10 @@ let to_string message = to_yojson message |> Yojson.Safe.to_string
 let of_string_exn message = Yojson.Safe.from_string message |> message_of_yojson |> function
   | Ok msg -> msg
   | Error err -> failwith (Printf.sprintf "Failed to parse message from string: %s\n" err)
-let id content = String.hash ((Float.to_string @@ Unix.time ()) ^ content)
+let id content = String.hash ((Float.to_string @@ Unix.gettimeofday ()) ^ content)
 
 let create (content : string) =
-  Message { id = id content; time = Unix.time (); content }
+  Message { id = id content; time = Unix.gettimeofday (); content }
 
 let get_time_exn message =
   match message with
