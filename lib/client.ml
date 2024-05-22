@@ -1,5 +1,6 @@
-open Lwt
+open Utils
 
 let run address port =
-  Connection.create address port >>= fun sock ->
-  Lwt_io.print "Successfully connected\n" >>= fun () -> Connection.handle sock
+  let* sock = Connection.create address port in
+  let* () = Lwt_io.print "Successfully connected\n" in 
+  Connection.handle sock
