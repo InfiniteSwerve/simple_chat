@@ -1,4 +1,5 @@
 open Lwt
+let ( let* ) = Lwt.bind
 
 (* NOTE: handle is the main loop for both client and server.
    Either side can send a message which will only appear in the senders chat after receiving an ack from the reciever.
@@ -23,25 +24,31 @@ let handle sock =
         match String.trim msg |> Message.of_string_exn with
         | Acknowledgement id ->
             let time, content = Hashtbl.find queued_messages id in
-            Lwt_io.printf "User: %s\nRoundtrip time: %f ms\n" content
-              (Unix.gettimeofday () -. time)
-            >>= fun () -> read_messages ()
+            let* () =
+              Lwt_io.printf "User: %s\nRoundtrip time: %f ms\n" content
+                (Unix.gettimeofday () -. time)
+            in
+            read_messages ()
         | Message msg ->
-            Lwt_io.printf "Other: %s\n" msg.content >>= fun () ->
-            Lwt_io.write_line oc
-              (Message.Acknowledgement msg.id |> Message.to_string)
-            >>= fun () -> read_messages ())
+            let* () = Lwt_io.printf "Other: %s\n" msg.content in
+            let* () =
+              Lwt_io.write_line oc
+                (Message.Acknowledgement msg.id |> Message.to_string)
+            in
+            read_messages ())
     | None -> Lwt_io.print "Connection closed\n"
   in
   let rec send_messages () =
-    Lwt_io.read_line Lwt_io.stdin >>= fun content ->
+    let* content = Lwt_io.read_line Lwt_io.stdin in
     let message = Message.create content in
     (* TODO: A bit verbose here *)
-    Hashtbl.add queued_messages
-      (Message.get_id_exn message)
-      (Message.get_time_exn message, Message.get_content_exn message);
-    Message.to_yojson message |> Yojson.Safe.to_string |> Lwt_io.write_line oc
-    >>= fun () -> send_messages ()
+    let* () =
+      Hashtbl.add queued_messages
+        (Message.get_id_exn message)
+        (Message.get_time_exn message, Message.get_content_exn message);
+      Message.to_yojson message |> Yojson.Safe.to_string |> Lwt_io.write_line oc
+    in
+    send_messages ()
   in
   let start () =
     Lwt.async read_messages;
